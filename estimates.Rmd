@@ -1,0 +1,463 @@
+---
+title: "The Development Gap in Economic Rationality of Future Elites"
+author: "Erik Ø. Sørensen"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 2
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+extrafont::loadfonts()
+library("multcomp")
+library("tidyverse")
+library("haven")
+library("modelsummary")
+library("kableExtra")
+library("here")
+```
+
+
+# Reading data
+Reading the background data
+```{r}
+dfb <- read_dta(here("data", "background.dta")) %>% 
+  mutate(two_parents_HS = mother2school*father2school,
+         one_parent_college = pmax(motheruni,fatheruni),
+         country = sjlabelled::as_label(country),
+         iq = iq/26.0,
+         female = as.numeric(sex==2),
+         Tanzania = as.numeric( country=="Tanzania"))
+```
+
+Reading the rationalizability scores.
+```{r}
+df <- read_dta(here("data", "calculated_RP_measures.dta")) |> 
+  left_join(dfb)
+```
+
+
+# Summaries of background data
+
+```{r}
+dfb %>% group_by(country) %>%
+  summarize(one_parent_college = mean(one_parent_college),
+            female = mean(sex==2),
+            age = mean(age, na.rm=TRUE)) %>%
+  kable(digits=c(0,3,3,1))
+```
+
+
+# Graphs of behavioral outcomes
+
+## Means of the main outcomes
+
+Overall means for a striking first figure of the rationalizability scores. First, calculate the means and standard errors 
+for both the original and the standardized scores.
+
+```{r}
+fig_dta <- df %>% 
+  dplyr::select(country, CCEI_PQR, FOSD_PQR, EU_PQR, iq) %>%
+  gather(key="outcome", value="value", CCEI_PQR:iq, factor_key=TRUE) %>%
+  mutate(outcome_nm = fct_recode(outcome,
+                                 "e*" = "CCEI_PQR",
+                                 "e**" = "FOSD_PQR",
+                                 "e***" = "EU_PQR"))  %>%
+  group_by(outcome_nm) %>%
+  mutate(zvalue = scale(value),
+         sd = sd(value)) %>%
+  group_by(country, outcome_nm) %>%
+  summarize(overall_sd = min(sd),
+            mean = mean(value),
+            zmean = mean(zvalue),
+            se_mean = sd(value)/sqrt(n()),
+            se_zmean = sd(zvalue)/sqrt(n()))
+```
+
+Now, the first plot with the rationalizability scores:
+```{r}
+fig_dta %>% filter(outcome_nm!="iq") %>%
+  ggplot(aes(x=outcome_nm, 
+             y=mean, 
+             ymin = mean - 1.96 * se_mean, 
+             ymax = mean + 1.96 * se_mean, 
+             fill=country)) + 
+  geom_bar(orientation="x", stat="identity", position=position_dodge2()) +
+  geom_errorbar(position=position_dodge(0.9), width=0.3) +
+  labs(y="Mean \u00B1 95% C.I.", x= element_blank(), fill = "Country") +
+  theme_minimal() + 
+  ylim(0, 1) 
+ggsave(here("graphs", "mean_differences.pdf"), width=16, height=10, units="cm")
+```
+
+Similar graph, but with standardized outcomes and including the IQ scores. We decided to change this
+graph into differences between countries: I make it differences between US and Tanzania.
+
+```{r}
+fig_dtaw <- fig_dta |> 
+  pivot_wider(id_cols = outcome_nm, names_from = country, values_from = c(zmean, se_zmean)) |>
+  mutate( zdiff = `zmean_United States` - zmean_Tanzania,
+          zdiff_se =  sqrt((`se_zmean_United States`)^2 + se_zmean_Tanzania^2 ))
+```
+
+
+```{r}
+fig_dtaw %>%
+  ggplot(aes(x=outcome_nm, 
+             y=zdiff, 
+             ymin = zdiff - 1.96 * zdiff_se, 
+             ymax = zdiff + 1.96 * zdiff_se)) + 
+  geom_col() +
+  geom_errorbar(width=0.3) +
+  labs(y="Mean difference in standardized outcomes\nUnited States vs Tanzania \u00B1 95% C.I.", x= element_blank()) +
+  theme_minimal() 
+ggsave(here("graphs", "zmean_differences.pdf"), width=16, height=10, units="cm")
+```
+
+In the final figure, each of the four outcomes have been standardized to an overall average of zero and unit variance before
+calculating the averages by country.
+
+What are the numbers?
+```{r}
+fig_dta %>% dplyr::select(country, outcome_nm, overall_sd, mean, se_mean, zmean, se_zmean) %>%
+  knitr::kable(digits=3)
+```
+
+
+## CDF graphs for all outcomes
+
+For reference, not for the paper: CDFs for the four outcomes on the original scale.
+```{r}
+cdf_data <- df %>% 
+  dplyr::select(country, CCEI_PQR, FOSD_PQR, EU_PQR, iq) %>%
+  gather(key="outcome", value="value", CCEI_PQR:iq, factor_key=TRUE) %>%
+  filter(!is.na(country)) %>%
+  mutate(yfct=fct_recode(outcome,
+                      "e*" = "CCEI_PQR",
+                      "e**" = "FOSD_PQR",
+                      "e***" = "EU_PQR"))
+cdf_data %>% ggplot(aes(x=value, linetype=country)) + 
+  stat_ecdf(geom="step") + facet_wrap(.~yfct) + 
+  theme_minimal() + theme(legend.position="bottom") + 
+  ylab("ECDF(outcome)")  +
+  xlab(element_blank()) 
+ggsave(here("graphs", "cdf_outcomes.pdf"))
+```
+
+## Survival function plot 
+```{r}
+s_df <- cdf_data %>% group_by(country,yfct) %>% 
+  mutate(S  = 1 - cume_dist(value),
+         prop = cut(value, c(0,seq(0.6,1,0.1)))) %>%
+  group_by(country, yfct, prop) %>%
+  summarize(meanS = mean(S),
+            maxS = max(S))
+
+s_df %>% filter(prop != "(0,0.6]") %>%
+  filter(yfct !="IQ") %>%
+  mutate(interval_lower = fct_recode(prop,
+                                     "0.6" = "(0.6,0.7]",
+                                     "0.7" = "(0.7,0.8]",
+                                     "0.8" = "(0.8,0.9]",
+                                     "0.9" = "(0.9,1]"),
+         yfct = fct_recode(yfct,
+                           "A.           e*" = "e*",
+                           "B.           e**"= "e**",
+                           "C.           e***"="e***")) %>%
+  ggplot(aes(y=maxS, x=interval_lower, group=country, fill=country)) +
+  geom_bar(stat='identity', position = position_dodge2()) +
+  theme_minimal() +
+  facet_wrap(. ~ yfct) + 
+  theme( strip.text=element_text(hjust=0) ) +
+  labs(x = "Critical value",
+       y = "Fraction of subjects") 
+ggsave(here::here("graphs","survival_graph.pdf"), 
+       width=16, height=10, units="cm")
+```
+
+For reference, but not for the paper: Continuous variants of the survival graphs for all four outcomes:
+```{r}
+cdf_data %>% group_by(country,yfct) %>% 
+  filter(value>0.6) %>%
+  mutate(S  = 1 - cume_dist(value)) %>%
+  ggplot(aes(y = S, x = value, group=country, linetype=country)) +
+  geom_step() +
+  theme_minimal() +
+  facet_wrap(.~yfct) +
+  labs(x = "Efficiency index",
+       y = "Proportion > efficiency index",
+       linetype = "Country")
+ggsave(here::here("graphs","survival_graph_continuous.pdf"),
+       width=16, height = 10, units="cm")
+```
+
+
+# Summary statistics on socio demographics
+
+
+```{r}
+dfb_selected <- dfb %>% dplyr::select(c("ID", "workincome", "two_parents_HS", 
+                                 "one_parent_college"))
+se <- function(x) {
+  sd(x, na.rm=TRUE)/sqrt(length(x[!is.na(x)]))
+}
+df %>% dplyr::select(c("ID", "country", "age", "female", "BF_E", "BF_A", "BF_C", 
+  "BF_N", "BF_O", "iq")) %>%
+  left_join(dfb_selected, by="ID") %>%
+  dplyr::select(-"ID") %>%
+  group_by(country) %>%
+  summarize_all(list(mean= ~ mean(., na.rm=TRUE), se= ~se(.)))  %>%
+  gather(key="key", value="value", Age_mean:one_parent_college_se) %>%
+  spread(key="country", value="value") %>% knitr::kable(digits=3)
+```
+
+
+## Tests for table
+```{r}
+df %>% t.test(iq ~ country, data=.)
+df %>% t.test(BF_A ~ country, data=.)
+df %>% t.test(BF_C ~ country, data=.)
+df %>% t.test(BF_E ~ country, data=.)
+df %>% t.test(BF_N ~ country, data=.)
+df %>% t.test(BF_O ~ country, data=.)
+```
+
+
+# Risk aversion
+
+For Tanzania, we are interested in whether high and low stakes individuals
+exhibited different risk aversion. We operationalize risk aversion by
+the average fraction of tokens in the cheaper security.
+
+First, read the decision data, drop the pilot data, 
+calculate the mean share to the cheaper asset for everyone, join this onto 
+the other data at the individual level.
+```{r}
+decisions <- read_dta(here("data", "decisions.dta")) 
+ra_df <- decisions %>% 
+  filter(ID>100) %>%
+  mutate(share_cheapest = ifelse(YM>XM, Y/(X+Y), X/(X+Y))) %>%
+  group_by(ID, Treatment) %>%
+  summarize(mean_cheapest_asset = mean(share_cheapest))
+df <- df %>% left_join(ra_df)
+```
+
+Now, what are the average risk aversion in the three group?
+```{r}
+dfsum <- df %>% mutate(country_high = factor(ifelse(Tanzania!=1, "United States", 
+                                      ifelse(High==1, "Tanzania - high", "Tanzania - low"))))
+
+dfsum %>% group_by(country_high) %>% summarize(mean = mean(mean_cheapest_asset),
+                                       std.dev = sd(mean_cheapest_asset),
+                                       se = std.dev/sqrt(n())) %>%
+  knitr::kable(digits=3)
+```
+
+Also, the distribution of this measure across groups:
+```{r}
+dfsum %>% ggplot(aes(x=mean_cheapest_asset, 
+                     y=(..count..)/tapply(..count..,..PANEL..,sum)[..PANEL..])) + 
+  geom_histogram( binwidth = 0.05, boundary=0.5) + 
+  theme_minimal() +
+  facet_wrap(. ~ country_high) +
+  labs(y = "Proportion of individuals",
+       x = "Mean share of tokens allocated to cheapest asset")
+```
+
+
+Testing (t-test) for equality between the treatments in Tanzania?
+```{r}
+df %>% filter(Tanzania==1) %>%
+  t.test(mean_cheapest_asset ~ High, data=.)
+```
+
+Correlations between risk aversion and outcomes:
+```{r}
+df %>% group_by(Country) %>% 
+  summarize(c_e1 = cor(mean_cheapest_asset, CCEI_PQR),
+            c_e2 = cor(mean_cheapest_asset, FOSD_PQR),
+            c_e3 = cor(mean_cheapest_asset, EU_PQR),
+            c_IQ = cor(mean_cheapest_asset, IQ)) %>%
+  knitr::kable(digits=3)
+```
+
+
+
+# Development gap in econ rationality
+
+Adding the background data (for parental education).
+```{r}
+df_wb <- df %>% left_join(dfb_selected, by="ID")
+```
+
+
+```{r}
+GARP1 <- lm(CCEI_PQR ~ Tanzania + High + mean_cheapest_asset + Age + Female + one_parent_college, data=df_wb)
+GARP2 <- lm(CCEI_PQR ~ Tanzania + High + mean_cheapest_asset + Age + Female + one_parent_college + BF_A + BF_C + BF_E + BF_N + BF_O , data=df_wb)
+GARP3 <- lm(CCEI_PQR ~ Tanzania + High + mean_cheapest_asset + Age + Female + one_parent_college + BF_A + BF_C + BF_E + BF_N + BF_O + IQ, data=df_wb)
+
+FGARP1 <- lm(FOSD_PQR ~ Tanzania + High + mean_cheapest_asset + Age + Female + one_parent_college, data=df_wb)
+FGARP2 <- lm(FOSD_PQR ~ Tanzania + High + mean_cheapest_asset + Age + Female + one_parent_college + BF_A + BF_C + BF_E + BF_N + BF_O , data=df_wb)
+FGARP3 <- lm(FOSD_PQR ~ Tanzania + High + mean_cheapest_asset + Age + Female + one_parent_college + BF_A + BF_C + BF_E + BF_N + BF_O + IQ, data=df_wb)
+
+EUT1 <- lm(EU_PQR ~ Tanzania + High + mean_cheapest_asset + Age + Female + one_parent_college , data=df_wb)
+EUT2 <- lm(EU_PQR ~ Tanzania + High + mean_cheapest_asset + Age + Female + one_parent_college + BF_A + BF_C + BF_E + BF_N + BF_O ,  data=df_wb)
+EUT3 <- lm(EU_PQR ~ Tanzania + High + mean_cheapest_asset + Age + Female + one_parent_college + BF_A + BF_C + BF_E + BF_N + BF_O + IQ, data=df_wb)
+
+IQ1 <- lm(IQ ~ Tanzania + High + mean_cheapest_asset + Age + Female + one_parent_college, data=df_wb)
+IQ2 <- lm(IQ ~ Tanzania + High + mean_cheapest_asset + Age + Female + one_parent_college + 
+              BF_A + BF_C + BF_E + BF_N + BF_O, data=df_wb)
+```
+
+Based on these regressions, I want to add the p-value of a test that there is no difference between the US and the Tanzanian high group:
+
+```{r}
+ftests <- c("US equal to Tanzania high (p-val)", 
+            format(summary(glht(GARP1, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(FGARP1, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(EUT1, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(GARP2, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(FGARP2, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(EUT2, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(GARP3, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(FGARP3, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(EUT3, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(IQ1, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(IQ2, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3)
+)
+```
+
+
+
+```{r}
+m_names <- c('Tanzania' = 'Tanzania',
+             'High' = 'High stakes (Tanzania)',
+             'mean_cheapest_asset' = 'Risk aversion',
+             'Age' = 'Age',
+             'Female' = 'Female',
+             'one_parent_college' = 'Parents have college education',
+             'IQ' = 'IQ')
+
+modelsummary::modelsummary(list("(1)"=GARP1, "(2)"=FGARP1, "(3)"=EUT1, 
+                                "(4)"=GARP2, "(5)"=FGARP2, "(6)"=EUT2,
+                                "(7)"=GARP3, "(8)"=FGARP3, "(9)"=EUT3,
+                                "(10)"=IQ1, "(11)"=IQ2),
+                           statistic = "std.error", coef_map = m_names,
+                           stars = TRUE,
+                           gof_omit = 'R2 Adj.|AIC|BIC|Log.Lik.|F',
+                           output = 'latex',
+                           add_rows = as.data.frame(t(ftests))) %>%
+  add_header_above(c(" " = 1, "Baseline" = 3, "Baseline + Big-5" = 3,  "Baseline + Big-5 and IQ" = 3, "Cognitive ability" = 2)) %>%
+  cat(file= here::here("development_gap.tex"))
+```
+
+Also outputting to html record: 
+```{r}
+modelsummary::modelsummary(list("(1)"=GARP1, "(2)"=FGARP1, "(3)"=EUT1, 
+                                "(4)"=GARP2, "(5)"=FGARP2, "(6)"=EUT2,
+                                "(7)"=GARP3, "(8)"=FGARP3, "(9)"=EUT3,
+                                "(10)"=IQ1, "(11)"=IQ2),
+                           statistic = "std.error", coef_map = m_names,
+                           stars = TRUE,
+                           gof_omit = 'R2 Adj.|AIC|BIC|Log.Lik.|F',
+                           output = 'kableExtra',
+                           add_rows = as.data.frame(t(ftests))) %>%
+  add_header_above(c(" " = 1, "Baseline" = 3, "Baseline + Big-5" = 3,  "Baseline + Big-5 and IQ" = 3, "Cognitive ability" = 2)) 
+```
+
+
+
+Also want to add row with standard deviation of outcomes. 
+```{r}
+df %>% dplyr::select(CCEI_PQR, FOSD_PQR, EU_PQR, IQ) %>%
+  summarise_all(sd) %>%
+  knitr::kable(digits=3)
+```
+
+
+
+
+# More descriptives about the samples
+
+For the Tanzania sample, we have a separate survey. 
+```{r}
+tz_df <- read_dta(here::here("data","tanzaniasurvey.dta"))
+```
+
+Many of the answers we are interested in are free-form, such as field of study and
+place of origin. I dump these to csv-files, for manual categorization in a spreadsheet,
+for later to be read as categories. 
+```{r}
+tz_df %>% group_by(birthplace) %>%
+  summarize(n_responses = n()) %>%
+  write_csv(here::here("birthplaces_raw.csv"))
+tz_df %>% group_by(studysubject) %>%
+  summarize(n_responses = n()) %>%
+  write_csv(here::here("studysubjects_raw.csv"))
+birthplaces_categorized <- read_csv(here::here("birthplaces_categorized.csv")) %>%
+  dplyr::select(-n_responses)
+studysubjects_categorized <- read_csv(here::here("studysubjects_categorized.csv")) %>%
+  dplyr::select(-n_responses)
+tz_df <- tz_df %>% left_join(studysubjects_categorized, by="studysubject") %>%
+  left_join(birthplaces_categorized, by="birthplace")
+```
+
+## Where are they from? 
+There are 32 **regions** in Tanzania (three of them on Zanzibar). I have 
+manually classified self-reported birthplace to region.
+
+```{r}
+tz_df %>% group_by(region) %>%
+  summarize( n = n()) %>%
+  arrange(-n) %>% 
+  mutate( proportion = n/sum(n), 
+          ranking = row_number()) %>%
+  knitr::kable(digits=3)
+```
+
+
+Note that the one "Zanzibar" response is not allocated to a proper region, as
+no more information than "Zanzibar" was given by the respondent. 
+
+While the participants at lab experiments at major American universities
+have been extensively studied, our sample at the University of Dar-es-Salaam
+comes from a less studied population, and not from a permanent pool
+of lab experiments. We implemented a small survey of our Tanzanian
+lab participants (on 215 out of our 216 lab participants). 
+
+While the university is located in Dar-es-Salaam, we have participants
+from 25 out of the 30 Tanzanian regions (as of 2012). Those born in 
+Dar-es-Salaam are well represented (16.7 %), but there are slightly more 
+from Kagera (17.2%) and almost as many from Kilimanjaro (13.5 %). There 
+are 6% or less from each of the other regions.
+
+```{r}
+tz_df %>% group_by(category) %>%
+  summarize( n = n()) %>%
+  arrange(-n) %>% 
+  mutate( proportion = n/sum(n), 
+          ranking = row_number()) %>%
+  knitr::kable(digits=3)
+```
+The most popular reported field of study among our respondents is one or more of the social sciences (42.8%),
+with science and engineering close behind (31.6%). Education (9.8%) and humanities (8.4%) are also represented,
+but there are less than four percent each from business management and law. On average they report
+to be `r mean(tz_df$yrs_study, na.rm=TRUE)` years into their study, with `r max(tz_df$yrs_study, na.rm=TRUE)` as the maximum. 
+
+The median reported yearly expenses was `r median(tz_df$year_expenses2, na.rm=TRUE)` TZS, corresponding to about 
+`r 0.0006 * median(tz_df$year_expenses2, na.rm=TRUE)` USD at 
+2012 exchange rates. Many report that they have support from their family (`r 100*mean(tz_df$familysupport)`%), 
+with a median support of `r median(tz_df$familysupport_value, na.rm=TRUE)` TZS per week (`r 0.0006 * median(tz_df$familysupport_value, na.rm=TRUE)` USD) per 
+week, and `r sum(!is.na(tz_df$govloan))/nrow(tz_df)` report that they are at least partly funded by 
+government loans (with, on average, `r mean(tz_df$govloan, na.rm=TRUE)`% of the costs of study covered by the student loans).
+
+# Session Info
+```{r}
+sessionInfo()
+```
+
