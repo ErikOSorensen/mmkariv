@@ -2,13 +2,11 @@
 title: "The Development Gap in Economic Rationality of Future Elites"
 author: "Erik Ø. Sørensen"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
+always_allow_html: true
 output:
   html_document:
-    toc: yes
+    toc: true
     toc_depth: 2
-  pdf_document:
-    toc: yes
-    toc_depth: '2'
 ---
 
 ```{r setup, include=FALSE}
