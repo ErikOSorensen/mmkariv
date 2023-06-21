@@ -1,0 +1,48 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: >-
+  Analysis code for "The Development Gap in Economic Rationality of Future Elites"
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Alexander W.
+    family-names: Cappelen
+    email: alexander.cappelen@nhh.no
+    affiliation: NHH Norwegian School of Economics
+    orcid: 'https://orcid.org/0000-0002-3489-7085'
+  - given-names: Shachar
+    family-names: Kariv
+    email: kariv@berkeley.edu
+    affiliation: 'University of California, Berkeley'
+    orcid: 'https://orcid.org/0000-0002-1382-3917'
+  - given-names: Erik Ø.
+    family-names: Sørensen
+    email: erik.sorensen@nhh.no
+    affiliation: NHH Norwegian School of Economics
+    orcid: 'https://orcid.org/0000-0002-7155-4188'
+  - given-names: Bertil
+    family-names: Tungodden
+    email: bertil.tungodden@nhh.no
+    affiliation: NHH Norwegian School of Economics
+    orcid: 'https://orcid.org/0000-0002-4182-8491'
+identifiers:
+  - type: doi
+    value: XXXXXXXXXXXXXXXXX
+    description: Contains the necessary data.
+abstract: >+
+  We test the touchstones of economic rationality---utility maximization,
+  stochastic dominance, and expected-utility maximization---of elite students in
+  the U.S. and in Africa. The choices of most students in both samples are
+  generally rationalizable, but the U.S. students' scores are substantially
+  higher. Nevertheless, the development gap in economic rationality between these
+  future elites is much smaller than the difference in performance on a canonical
+  cognitive ability test, often used as a proxy for economic decision-making
+  ability in studies of economic development and growth. We argue for the
+  importance of including consistency with economic rationality in studies of
+  decision-making ability.
+
+license: BSD-3-Clause
