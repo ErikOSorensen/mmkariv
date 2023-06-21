@@ -3,7 +3,7 @@ Authors:
 
 - Alexander W. Cappelen
 - Shachar Kariv
-- Erik Ø. Sørensen (contactperson for code and data)
+- Erik Ø. Sørensen (contactperson for code and data, erik.sorensen@nhh.no)
 - Bertil Tungodden
 
 **Abstract**: We test the touchstones of economic rationality---utility
@@ -51,13 +51,40 @@ The data file is downloaded when the `targets` plan is first run.
 
 ### Software requirements
 
+
+
 ### Memory and runtime requirements
 
-Approximate time needed to reproduce all the analyses on a desktop machine (2023) 
-would be about 15 seconds.
+Calculating the revealed preference statistics (in particular the CCEI for
+Expected Utility) is slow. the current setup parallelizes and runs separate
+branches for each participant. Running 12 processes in parallel on 
+a 2017 workstation, each branch takes on average a bit more than 20 minutes, so 
+there are about 30 individuals processed per hour, or about 10-12 hours in total
+for this task.
+
+Given the revealed preference statistics, Approximate time needed to reproduce
+all the analyses on a desktop machine (2023) is trivial.
 
 
 ## Description of programs/code
 
 The graphical displays are produced in the `graphs/` directory (as pdf-files). The tables are
 produced in the `tables/` directory (as tex-files). 
+
+The file `R/PollisonEtAl.R` contains functions extracted from the replication package
+of Pollison et al (2020a,2020b). This code
+was published CC-BY 4.0. The code
+in `R/functions.R` contains an interface
+function `calculate_rp_statistics(d)` that
+calculates the revealed preference statistics
+we use on the subset of data `d`.
+
+### License for Code
+
+The code is licensed under a BSD-3-Clause license. See [LICENSE_BSD-3-Clause.txt](LICENSE_BSD-3-Clause.txt) for details.
+
+
+## References
+
+- Polisson, Matthew, John K.-H. Quah, and Ludovic Renou (2020a). "Revealed Preferences over Risk and Uncertainty." American Economic Review 110(6): 1782-1820. https://doi.org/10.1257/aer.20180210.
+- Polisson, Matthew, Quah, John K.-H., and Renou, Ludovic (2020b). Data and Code for: Revealed Preferences over Risk and Uncertainty. Nashville, TN: American Economic Association [publisher], Ann Arbor, MI: Inter-university Consortium for Political and Social Research [distributor], 2020-05-27. https://doi.org/10.3886/E112146V1
