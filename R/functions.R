@@ -91,3 +91,24 @@ survivalgraph <- function(cdf_data) {
     labs(x = "Critical value",
          y = "Fraction of subjects") 
 }
+
+description <- function(d) {
+  id <- as.integer(d$ID[1])
+  summx <- mean(d$X)
+  summy <- mean(d$Y)
+  tibble(id=id, summx=summx, summy=summy)
+}
+
+calculate_rp_statistics <- function(d) {
+  p <- t(cbind(1/d$XM,1/d$YM))
+  x <- t(cbind(d$X, d$Y))
+  pi <- matrix(c(1/2,1/2),2,1)
+  egarp <- ccei_garp(p,x)
+  fgarp <- ccei_fgarp(p,x,pi)
+  eu <- ccei_eu(p, x, pi)
+  tibble(ID = as.integer(d$ID[1]),
+         CCEI_PQR = egarp,
+         FOSD_PQR = fgarp,
+         EU_PQR = eu)
+}
+
