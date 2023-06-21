@@ -14,6 +14,8 @@ tar_option_set(
     "ggplot2",
     "forcats",
     "haven", 
+    "sjlabelled",
+    "sjmisc",
     "gtools",
     "lpSolve",
     "lpSolveAPI"
