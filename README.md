@@ -51,6 +51,11 @@ The data file is downloaded when the `targets` plan is first run.
 
 ### Software requirements
 
+The analysis code was developed on an Ubuntu 22.04.2 machine with R 4.3.0. The 
+script that runs all the code (`main.R`) will install the packages needed, of the correct version,
+into a local library using the `renv` library (which must be installed ahead of time). The list
+of packages (and all necessary recursive dependencies) is found in the `renv` configuration file
+`renv.lock` which should not need to be touched. 
 
 
 ### Memory and runtime requirements
@@ -61,6 +66,15 @@ branches for each participant. Running 12 processes in parallel on a 2017
 workstation (Xeon E-2136 & 3.3GHz, 40GB memory), each branch takes on average a
 bit more than 20 minutes, so there are about 30 individuals processed per hour,
 or about 12 hours in total for this task with memory usage at about 25 GB.
+The parallel computations are controlled by the `future` library, and in 
+`main.R` there is a line to control how many worker processes to start:
+
+> tar_make_future(workers = 12)
+
+Set the number of workers to a number that is compatible with the number of cores 
+you can set aside (multiply by two if your processor allows hyperthreading).
+
+
 
 Given the revealed preference statistics, the time needed to reproduce
 the analyses is trivial (less than a minute).

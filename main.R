@@ -1,3 +1,4 @@
+renv::restore()
 source("_targets.R")
 
 # If you have local cached objects (from running tar_make() previously)
@@ -8,4 +9,4 @@ source("_targets.R")
 
 # set the number of workers to a number not larger than the
 # number of threads your computer can comfortably run in parallel
-tar_make_future(workers = 32)
+tar_make_future(workers = 12)
