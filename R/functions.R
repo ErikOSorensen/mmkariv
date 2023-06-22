@@ -25,7 +25,8 @@ clean_rectangular <- function(background, RP, decisions) {
   d_df <- process_decisions(decisions)
   RP |> left_join(b_df) |> left_join(d_df) |>
     mutate( country_high = factor(ifelse(Tanzania!=1, "United States", 
-                                 ifelse(Treatment==2, "Tanzania - high", "Tanzania - low"))))
+                                 ifelse(Treatment==2, "Tanzania - high", "Tanzania - low")))) |>
+    filter(!is.na(iq))
 }
 
 se <- function(x) {
