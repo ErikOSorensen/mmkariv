@@ -57,13 +57,13 @@ The data file is downloaded when the `targets` plan is first run.
 
 Calculating the revealed preference statistics (in particular the CCEI for
 Expected Utility) is slow. the current setup parallelizes and runs separate
-branches for each participant. Running 12 processes in parallel on 
-a 2017 workstation, each branch takes on average a bit more than 20 minutes, so 
-there are about 30 individuals processed per hour, or about 10-12 hours in total
-for this task.
+branches for each participant. Running 12 processes in parallel on a 2017
+workstation (Xeon E-2136 & 3.3GHz, 40GB memory), each branch takes on average a
+bit more than 20 minutes, so there are about 30 individuals processed per hour,
+or about 12 hours in total for this task with memory usage at about 25 GB.
 
-Given the revealed preference statistics, Approximate time needed to reproduce
-all the analyses on a desktop machine (2023) is trivial.
+Given the revealed preference statistics, the time needed to reproduce
+the analyses is trivial (less than a minute).
 
 
 ## Description of programs/code

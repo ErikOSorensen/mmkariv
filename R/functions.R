@@ -93,13 +93,6 @@ survivalgraph <- function(cdf_data) {
          y = "Fraction of subjects") 
 }
 
-description <- function(d) {
-  id <- as.integer(d$ID[1])
-  summx <- mean(d$X)
-  summy <- mean(d$Y)
-  tibble(id=id, summx=summx, summy=summy)
-}
-
 calculate_rp_statistics <- function(d) {
   p <- t(cbind(1/d$XM,1/d$YM))
   x <- t(cbind(d$X, d$Y))
