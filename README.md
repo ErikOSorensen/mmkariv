@@ -55,8 +55,7 @@ The analysis code was developed on an Ubuntu 22.04.2 machine with R 4.3.0. The
 script that runs all the code (`main.R`) will install the packages needed, of the correct version,
 into a local library using the `renv` library (which must be installed ahead of time). The list
 of packages (and all necessary recursive dependencies) is found in the `renv` configuration file
-`renv.lock` which should not need to be touched. 
-
+`renv.lock` which should not need to be touched.
 
 ### Memory and runtime requirements
 
@@ -73,8 +72,6 @@ The parallel computations are controlled by the `future` library, and in
 
 Set the number of workers to a number that is compatible with the number of cores 
 you can set aside (multiply by two if your processor allows hyperthreading).
-
-
 
 Given the revealed preference statistics, the time needed to reproduce
 the analyses is trivial (less than a minute).
@@ -93,9 +90,31 @@ function `calculate_rp_statistics(d)` that
 calculates the revealed preference statistics
 we use on the subset of data `d`.
 
+The dependencies of the analysis is controlled by the `targets` library. The list in 
+`_targets.R` defines a directed acyclic graph of dependencies, and the `tar_make` command
+figures out which results are cached and which needs to be recalculated. 
+
+Running all the analysis should be possible from the command line with:
+
+> Rscript main.R
+
+This will generate `estimates.html` at the root, and the displays in `graphs/` (figures as pdfs)
+and `tables/` (tables as tex-files). 
+
+The `targets` system is smart about
+caching intermediate results, so while running `main.R` takes a considerable amount of 
+time for the first run, minor adjustments to the output routines in the vignettes are 
+do not require the heavy computations to be re-run, and running `main.R` for the second
+time is almost free of costs with respect to changes in the display layer. 
+
+
 ### License for Code
 
-The code is licensed under a BSD-3-Clause license. See [LICENSE_BSD-3-Clause.txt](LICENSE_BSD-3-Clause.txt) for details.
+The code in `targets.R`, `R/functions.R` and `estimates.Rmd` is licensed under a BSD-3-Clause license. See [LICENSE_BSD-3-Clause.txt](LICENSE_BSD-3-Clause.txt) for details.
+
+The code in `R/PollisonEtAl.R` is a collection of code from Pollison et al (2020b), 
+covered by the [Creative Commons BY 4.0 license](https://creativecommons.org/licenses/by/4.0/). Apart from 
+collecting several functions into one file, no change was made to this code.
 
 
 ## References
