@@ -353,7 +353,7 @@ For a more detailed look at the subjects they studied, let's count the number th
 reported to have economics as part of their degree. 
 
 ```{r}
-read_csv(here::here("data","studysubjects_categorized.csv")) |>
+cat_table <- read_csv(here::here("data","studysubjects_categorized.csv")) |>
   mutate(contains_economic = str_detect(studysubject, regex("economic", ignore_case = TRUE))) |>
   group_by(contains_economic) |>
   group_by(category) |>
@@ -363,7 +363,11 @@ read_csv(here::here("data","studysubjects_categorized.csv")) |>
   arrange(-proportion) |>  
   dplyr::select(c(category, proportion, cond_prop_econ)) |>
   gt::gt() |>
-  gt::fmt_number(columns=c(proportion, cond_prop_econ), decimals = 3)
+  gt::fmt_number(columns=c(proportion, cond_prop_econ), decimals = 3) 
+cat_table
+cat_table |> as_latex() |> 
+  as.character() |> 
+  writeLines(con = here::here("tables","studysubjects.tex"))
 ```
 
 
@@ -376,8 +380,9 @@ The median reported yearly expenses was `r median(tz_df$year_expenses2, na.rm=TR
 For a fuller analysis of sources of finance, with all missing category observations set to zero:
 
 ```{r warning=FALSE}
-tanzaniasurvey |> dplyr::select(c(survey_id, ann_finance1, ann_finance2, ann_finance3, ann_finance4,
-               ann_finance5, ann_finance6, ann_finance7, ann_finance8)) |>
+income_table <- tanzaniasurvey |> 
+  dplyr::select(c(survey_id, ann_finance1, ann_finance2, ann_finance3, ann_finance4,
+                  ann_finance5, ann_finance6, ann_finance7, ann_finance8)) |>
   pivot_longer(starts_with("ann_finance")) |>
   mutate(amount = ifelse(!is.na(value),value,0),
          name = factor(name),
@@ -398,7 +403,11 @@ tanzaniasurvey |> dplyr::select(c(survey_id, ann_finance1, ann_finance2, ann_fin
   arrange(-budget_share) |>
   dplyr::select(c(source, budget_share, share_with_positive)) |>
   gt::gt() |> gt::fmt_number(decimals=3)
-  
+income_table
+income_table |> 
+  as_latex() |> 
+  as.character() |> 
+  writeLines(con=here::here("tables","budgetshares.tex"))
 ```
 
 
