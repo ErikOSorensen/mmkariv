@@ -41,5 +41,6 @@ list(
              iteration = "group"),
   tar_target(RP, 
              calculate_rp_statistics(individuals),
-             pattern = map(individuals))
+             pattern = map(individuals)),
+  tar_target(pubpreffig_dta, publicprefdata(df))
 )

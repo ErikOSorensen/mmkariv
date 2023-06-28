@@ -120,4 +120,4 @@ collecting several functions into one file, no change was made to this code.
 ## References
 
 - Polisson, Matthew, John K.-H. Quah, and Ludovic Renou (2020a). "Revealed Preferences over Risk and Uncertainty." American Economic Review 110(6): 1782-1820. https://doi.org/10.1257/aer.20180210.
-- Polisson, Matthew, Quah, John K.-H., and Renou, Ludovic (2020b). Data and Code for: Revealed Preferences over Risk and Uncertainty. Nashville, TN: American Economic Association [publisher], Ann Arbor, MI: Inter-university Consortium for Political and Social Research [distributor], 2020-05-27. https://doi.org/10.3886/E112146V1
+- Polisson, Matthew, John K.-H. Quah, and Ludovic Renou  (2020b). Data and Code for: Revealed Preferences over Risk and Uncertainty. Nashville, TN: American Economic Association [publisher], Ann Arbor, MI: Inter-university Consortium for Political and Social Research [distributor], 2020-05-27. https://doi.org/10.3886/E112146V1

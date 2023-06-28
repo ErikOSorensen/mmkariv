@@ -106,3 +106,23 @@ calculate_rp_statistics <- function(d) {
          EU_PQR = eu)
 }
 
+publicprefdata <- function(df) {
+  df |> 
+    mutate(government_preference  = factor(ifelse(jobopp_govm==3, "Yes", "No"), levels=c("No","Yes"))) |>
+    dplyr::select(country, government_preference, CCEI_PQR, FOSD_PQR, EU_PQR) |>
+    gather(key="outcome", value="value", CCEI_PQR:EU_PQR, factor_key=TRUE) |>
+    mutate(outcome_nm = fct_recode(outcome,
+                                   "e*" = "CCEI_PQR",
+                                   "e**" = "FOSD_PQR",
+                                   "e***" = "EU_PQR"))  %>%
+    group_by(outcome_nm) |>
+    mutate(zvalue = scale(value),
+           sd = sd(value)) |>
+    group_by(country, government_preference, outcome_nm) |>
+    summarize(overall_sd = min(sd),
+              mean = mean(value),
+              zmean = mean(zvalue),
+              se_mean = se(value),
+              se_zmean = se(zvalue)) |>
+    filter(!is.na(government_preference))
+}
