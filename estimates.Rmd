@@ -389,7 +389,7 @@ cat_table |> as_latex() |>
 ```
 
 
-
+## Financing of expenses
 
 The median reported yearly expenses was `r median(tz_df$year_expenses2, na.rm=TRUE)` TZS, corresponding to about 
 `r 0.0006 * median(tz_df$year_expenses2, na.rm=TRUE)` USD at 
@@ -414,12 +414,13 @@ income_table <- tanzaniasurvey |>
                              "Support from NGO" = "ann_finance7",
                              "Other" = "ann_finance8"),
          nonzero = as.numeric(amount>0)) |>
+  group_by(survey_id) |> 
+  mutate( share = amount / sum(amount)) |>
   group_by(source) |>
   summarize(share_with_positive = mean(nonzero),
-            total_amount = sum(amount)) |>
-  mutate(budget_share = total_amount / sum(total_amount)) |>
-  arrange(-budget_share) |>
-  dplyr::select(c(source, budget_share, share_with_positive)) |>
+            mean_share = mean(share, na.rm=TRUE)) |>
+  arrange(-share_with_positive) |>
+  dplyr::select(c(source, share_with_positive, mean_share)) |>
   gt::gt() |> gt::fmt_number(decimals=3)
 income_table
 income_table |> 
@@ -618,7 +619,7 @@ df |> group_by(country, happy) |>
   mutate(proportion = freq / sum(freq)) |>
   ggplot(aes(x=happy, y = proportion, fill=country)) + 
   geom_bar(stat='identity', position = position_dodge(preserve = "single"), width=0.9, preserve='single') + 
-  labs(x = "Reported happiness with life these days", y="Fraction") + 
+  labs(x = "Self-reported happiness", y="Fraction") + 
   scale_x_continuous(breaks = c(0,5,10)) +
   theme_minimal()
 ggsave(here::here("graphs","happiness_distribution.pdf"), width=16, height=10, units="cm")
