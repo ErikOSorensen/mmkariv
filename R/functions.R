@@ -2,11 +2,13 @@ library(tidyverse)
 process_background <- function(background) {
   background |> 
     dplyr::mutate(two_parents_HS = sjlabelled::zap_labels(mother2school) *
-                    sjlabelled::zap_labels(father2school),
+                  sjlabelled::zap_labels(father2school),
                   one_parent_college = pmax(motheruni,fatheruni),
                   country = sjlabelled::as_label(country),
                   iq = iq/26.0,
                   female = as.numeric(sex==2),
+                  government_preference  = factor(ifelse(jobopp_govm==3, "Yes", "No"), levels=c("No","Yes")),
+                  funding_education = factor(ifelse(withonemillion==3 | (!is.na(withonemillion2) & withonemillion2==3), "Yes","No"), levels=c("No","Yes")),
                   Tanzania = as.numeric( country=="Tanzania"))
 }
 
@@ -108,7 +110,6 @@ calculate_rp_statistics <- function(d) {
 
 publicprefdata <- function(df) {
   df |> 
-    mutate(government_preference  = factor(ifelse(jobopp_govm==3, "Yes", "No"), levels=c("No","Yes"))) |>
     dplyr::select(country, government_preference, CCEI_PQR, FOSD_PQR, EU_PQR) |>
     gather(key="outcome", value="value", CCEI_PQR:EU_PQR, factor_key=TRUE) |>
     mutate(outcome_nm = fct_recode(outcome,

@@ -204,30 +204,46 @@ df %>% group_by(country) %>%
 # Main regression table: Development gap in econ rationality
 
 ```{r}
-GARP1 <- lm(CCEI_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + happy, data=df)
-GARP2 <- lm(CCEI_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + happy + BF_A + BF_C + BF_E + BF_N + BF_O , data=df)
-GARP3 <- lm(CCEI_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + happy + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df)
+GARP1 <- lm(CCEI_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + happy + yworried + government_preference, data=df)
+GARP2 <- lm(CCEI_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + happy + yworried + government_preference + BF_A + BF_C + BF_E + BF_N + BF_O , data=df)
+GARP3 <- lm(CCEI_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + happy + yworried + government_preference + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df)
 
-FGARP1 <- lm(FOSD_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + happy, data=df)
-FGARP2 <- lm(FOSD_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + happy + BF_A + BF_C + BF_E + BF_N + BF_O , data=df)
-FGARP3 <- lm(FOSD_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + happy + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df)
+FGARP1 <- lm(FOSD_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + happy + yworried + government_preference, data=df)
+FGARP2 <- lm(FOSD_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + happy + yworried + government_preference + BF_A + BF_C + BF_E + BF_N + BF_O , data=df)
+FGARP3 <- lm(FOSD_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + happy + yworried + government_preference + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df)
 
-EUT1 <- lm(EU_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + happy , data=df)
-EUT2 <- lm(EU_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + happy + BF_A + BF_C + BF_E + BF_N + BF_O ,  data=df)
-EUT3 <- lm(EU_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + happy + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df)
+EUT1 <- lm(EU_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + happy + yworried + government_preference , data=df)
+EUT2 <- lm(EU_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + happy + yworried + government_preference + BF_A + BF_C + BF_E + BF_N + BF_O ,  data=df)
+EUT3 <- lm(EU_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + happy + yworried + government_preference + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df)
 
-IQ1 <- lm(iq ~ Tanzania + High + age + female + one_parent_college + workincome + happy, data=df)
-IQ2 <- lm(iq ~ Tanzania + High + age + female + one_parent_college + workincome + happy + 
+IQ1 <- lm(iq ~ Tanzania + High + age + female + one_parent_college + workincome + happy + yworried + government_preference, data=df)
+IQ2 <- lm(iq ~ Tanzania + High + age + female + one_parent_college + workincome + happy + yworried + government_preference + 
               BF_A + BF_C + BF_E + BF_N + BF_O, data=df)
 ```
 
+Based on these regressions, I want to add the p-value of a test that there is no difference between the US and the Tanzanian high group:
 
+```{r}
+ftests <- c("US equal to Tanzania high (p-val)", 
+            format(summary(glht(GARP1, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(FGARP1, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(EUT1, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(GARP2, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(FGARP2, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(EUT2, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(GARP3, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(FGARP3, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(EUT3, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(IQ1, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3),
+            format(summary(glht(IQ2, linfct = c("Tanzania + High = 0")))$test$pvalues[1],digits=3)
+)
+```
 
 Also want to (manually) add row with standard deviation of outcomes. 
 ```{r}
 sds <- df %>% dplyr::select(CCEI_PQR, FOSD_PQR, EU_PQR, iq) |>
   summarise_all(sd) 
-sds
+sds |> gt::gt() |> gt::fmt_number(decimals=3)
 ```
 
 And for the standardized effect of "Tanzania", calculate effects
@@ -258,6 +274,8 @@ m_names <- c('Tanzania' = 'Tanzania',
              'one_parent_college' = 'Parents have college education',
              'workincome' = 'Income from work?',
              'happy' = 'Happiness',
+             'yworried' = 'Worried yesterday',
+             'government_preferenceYes' = 'Public sector preference',
              'iq' = 'IQ',
              '(Intercept)' = 'Constant')
 big5 <- c("Big-5 included?", "No", "No", "No", "Yes","Yes","Yes","Yes","Yes","Yes","Yes","Yes")
@@ -266,10 +284,10 @@ modelsummary::modelsummary(list("(1)"=GARP1, "(2)"=FGARP1, "(3)"=EUT1,
                                 "(7)"=GARP3, "(8)"=FGARP3, "(9)"=EUT3,
                                 "(10)"=IQ1, "(11)"=IQ2),
                            statistic = "std.error", coef_map = m_names,
-                           stars =  c('*' = .1, '**' = .05, '***'=0.1),
+                           stars =  c('*' = .1, '**' = .05, '***'=0.01),
                            gof_omit = 'R2 Adj.|AIC|BIC|Log.Lik.|F|RMSE',
                            output = 'latex',
-                           add_rows = as.data.frame(t(tibble(big5, Ztanzania)))) %>%
+                           add_rows = as.data.frame(t(tibble(big5, Ztanzania, ftests)))) %>%
   add_header_above(c(" " = 1, "Baseline" = 3, "Baseline + Big-5" = 3,  "Baseline + Big-5 and IQ" = 3, "Cognitive ability" = 2)) %>%
   cat(file= here::here("tables/development_gap.tex"))
 ```
@@ -281,10 +299,10 @@ modelsummary::modelsummary(list("(1)"=GARP1, "(2)"=FGARP1, "(3)"=EUT1,
                                 "(7)"=GARP3, "(8)"=FGARP3, "(9)"=EUT3,
                                 "(10)"=IQ1, "(11)"=IQ2),
                            statistic = "std.error", coef_map = m_names,
-                           stars = c('*' = .1, '**' = .05, '***'=0.1),
+                           stars = c('*' = .1, '**' = .05, '***'=0.01),
                            gof_omit = 'R2 Adj.|AIC|BIC|Log.Lik.|F|RMSE',
                            output = 'kableExtra',
-                           add_rows = as.data.frame(t(tibble(big5, Ztanzania)))) %>%
+                           add_rows = as.data.frame(t(tibble(big5, Ztanzania, ftests)))) %>%
   add_header_above(c(" " = 1, "Baseline" = 3, "Baseline + Big-5" = 3,  "Baseline + Big-5 and IQ" = 3, "Cognitive ability" = 2)) 
 ```
 
@@ -415,24 +433,24 @@ income_table |>
 
 # Further analysis (for appendix)
 
-## Variant of Table I from main paper with risk aversion included
+## Variant of Table I from main paper with risk aversion and everything 
 
 
 ```{r}
-rGARP1 <- lm(CCEI_PQR ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy, data=df)
-rGARP2 <- lm(CCEI_PQR ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy + BF_A + BF_C + BF_E + BF_N + BF_O , data=df)
-rGARP3 <- lm(CCEI_PQR ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df)
+rGARP1 <- lm(CCEI_PQR ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy + yworried + government_preference + gambling + funding_education , data=df)
+rGARP2 <- lm(CCEI_PQR ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy + yworried + government_preference + gambling + funding_education  + BF_A + BF_C + BF_E + BF_N + BF_O , data=df)
+rGARP3 <- lm(CCEI_PQR ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy + yworried + government_preference + gambling + funding_education  + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df)
 
-rFGARP1 <- lm(FOSD_PQR ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy, data=df)
-rFGARP2 <- lm(FOSD_PQR ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy + BF_A + BF_C + BF_E + BF_N + BF_O , data=df)
-rFGARP3 <- lm(FOSD_PQR ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df)
+rFGARP1 <- lm(FOSD_PQR ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy + yworried + government_preference + gambling + funding_education , data=df)
+rFGARP2 <- lm(FOSD_PQR ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy + yworried + government_preference + gambling + funding_education  + BF_A + BF_C + BF_E + BF_N + BF_O , data=df)
+rFGARP3 <- lm(FOSD_PQR ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy + yworried + government_preference + gambling + funding_education  + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df)
 
-rEUT1 <- lm(EU_PQR ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy , data=df)
-rEUT2 <- lm(EU_PQR ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy + BF_A + BF_C + BF_E + BF_N + BF_O ,  data=df)
-rEUT3 <- lm(EU_PQR ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df)
+rEUT1 <- lm(EU_PQR ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy + yworried + government_preference + gambling + funding_education  , data=df)
+rEUT2 <- lm(EU_PQR ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy + yworried + government_preference + gambling + funding_education  + BF_A + BF_C + BF_E + BF_N + BF_O ,  data=df)
+rEUT3 <- lm(EU_PQR ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy + yworried + government_preference + gambling + funding_education  + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df)
 
-rIQ1 <- lm(iq ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy, data=df)
-rIQ2 <- lm(iq ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy + 
+rIQ1 <- lm(iq ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy + yworried + government_preference + gambling + funding_education , data=df)
+rIQ2 <- lm(iq ~ Tanzania + High + mean_cheapest_asset + age + female + one_parent_college + workincome + happy + yworried + government_preference + gambling + funding_education  + 
               BF_A + BF_C + BF_E + BF_N + BF_O, data=df)
 ```
 
@@ -447,6 +465,10 @@ rm_names <- c('Tanzania' = 'Tanzania',
              'one_parent_college' = 'Parents have college education',
              'workincome' = 'Income from work?',
              'happy' = 'Happiness',
+             'yworried' = 'Worried yesterday',
+             'government_preferenceYes' = 'Public sector preference',
+             'gambling' = 'Self image as gambler',
+             'funding_educationYes' = 'Would spend money on education',
              'iq' = 'IQ',
              '(Intercept)' = 'Constant')
 modelsummary::modelsummary(list("(1)"=rGARP1, "(2)"=rFGARP1, "(3)"=rEUT1, 
@@ -454,7 +476,7 @@ modelsummary::modelsummary(list("(1)"=rGARP1, "(2)"=rFGARP1, "(3)"=rEUT1,
                                 "(7)"=rGARP3, "(8)"=rFGARP3, "(9)"=rEUT3,
                                 "(10)"=rIQ1, "(11)"=rIQ2),
                            statistic = "std.error", coef_map = rm_names,
-                           stars =  c('*' = .1, '**' = .05, '***'=0.1),
+                           stars =  c('*' = .1, '**' = .05, '***'=0.01),
                            gof_omit = 'R2 Adj.|AIC|BIC|Log.Lik.|F|RMSE',
                            output = 'latex',
                            add_rows = as.data.frame(t(big5))) %>%
@@ -469,76 +491,12 @@ modelsummary::modelsummary(list("(1)"=rGARP1, "(2)"=rFGARP1, "(3)"=rEUT1,
                                 "(7)"=rGARP3, "(8)"=rFGARP3, "(9)"=rEUT3,
                                 "(10)"=rIQ1, "(11)"=rIQ2),
                            statistic = "std.error", coef_map = rm_names,
-                           stars = c('*' = .1, '**' = .05, '***'=0.1),
+                           stars = c('*' = .1, '**' = .05, '***'=0.01),
                            gof_omit = 'R2 Adj.|AIC|BIC|Log.Lik.|F|RMSE',
                            output = 'kableExtra',
                            add_rows = as.data.frame(t(big5))) %>%
   add_header_above(c(" " = 1, "Baseline" = 3, "Baseline + Big-5" = 3,  "Baseline + Big-5 and IQ" = 3, "Cognitive ability" = 2)) 
 ```
-
-## Variant of Table I from main paper with "worried yesterday" instead of happiness
-
-
-```{r}
-wGARP1 <- lm(CCEI_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + yworried, data=df)
-wGARP2 <- lm(CCEI_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + yworried + BF_A + BF_C + BF_E + BF_N + BF_O , data=df)
-wGARP3 <- lm(CCEI_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + yworried + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df)
-
-wFGARP1 <- lm(FOSD_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + yworried, data=df)
-wFGARP2 <- lm(FOSD_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + yworried + BF_A + BF_C + BF_E + BF_N + BF_O , data=df)
-wFGARP3 <- lm(FOSD_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + yworried + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df)
-
-wEUT1 <- lm(EU_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + yworried , data=df)
-wEUT2 <- lm(EU_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + yworried + BF_A + BF_C + BF_E + BF_N + BF_O ,  data=df)
-wEUT3 <- lm(EU_PQR ~ Tanzania + High + age + female + one_parent_college + workincome + yworried + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df)
-
-wIQ1 <- lm(iq ~ Tanzania + High + age + female + one_parent_college + workincome + yworried, data=df)
-wIQ2 <- lm(iq ~ Tanzania + High + age + female + one_parent_college + workincome + yworried + 
-              BF_A + BF_C + BF_E + BF_N + BF_O, data=df)
-```
-
-
-
-```{r warning=FALSE}
-w_names <- c('Tanzania' = 'Tanzania',
-             'High' = 'High stakes (Tanzania)',
-             'age' = 'Age',
-             'female' = 'Female',
-             'one_parent_college' = 'Parents have college education',
-             'workincome' = 'Income from work?',
-             'yworried' = 'Worried most of yesterday?',
-             'iq' = 'IQ',
-             '(Intercept)' = 'Constant')
-big5 <- c("Big-5 included?", "No", "No", "No", "Yes","Yes","Yes","Yes","Yes","Yes","Yes","Yes")
-modelsummary::modelsummary(list("(1)"=wGARP1, "(2)"=wFGARP1, "(3)"=wEUT1, 
-                                "(4)"=wGARP2, "(5)"=wFGARP2, "(6)"=wEUT2,
-                                "(7)"=wGARP3, "(8)"=wFGARP3, "(9)"=wEUT3,
-                                "(10)"=wIQ1, "(11)"=wIQ2),
-                           statistic = "std.error", coef_map = w_names,
-                           stars =  c('*' = .1, '**' = .05, '***'=0.1),
-                           gof_omit = 'R2 Adj.|AIC|BIC|Log.Lik.|F|RMSE',
-                           output = 'latex',
-                           add_rows = as.data.frame(t(tibble(big5)))) %>%
-  add_header_above(c(" " = 1, "Baseline" = 3, "Baseline + Big-5" = 3,  "Baseline + Big-5 and IQ" = 3, "Cognitive ability" = 2)) %>%
-  cat(file= here::here("tables/development_gap_worried.tex"))
-```
-
-Also outputting to html record: 
-```{r warning=FALSE}
-modelsummary::modelsummary(list("(1)"=wGARP1, "(2)"=wFGARP1, "(3)"=wEUT1, 
-                                "(4)"=wGARP2, "(5)"=wFGARP2, "(6)"=wEUT2,
-                                "(7)"=wGARP3, "(8)"=wFGARP3, "(9)"=wEUT3,
-                                "(10)"=wIQ1, "(11)"=wIQ2),
-                           statistic = "std.error", coef_map = w_names,
-                           stars = c('*' = .1, '**' = .05, '***'=0.1),
-                           gof_omit = 'R2 Adj.|AIC|BIC|Log.Lik.|F|RMSE',
-                           output = 'kableExtra',
-                           add_rows = as.data.frame(t(tibble(big5)))) %>%
-  add_header_above(c(" " = 1, "Baseline" = 3, "Baseline + Big-5" = 3,  "Baseline + Big-5 and IQ" = 3, "Cognitive ability" = 2)) 
-```
-
-
-
 
 ## Treatment effect of stakes on rationalizability (in Tanzania)
 
@@ -546,24 +504,29 @@ modelsummary::modelsummary(list("(1)"=wGARP1, "(2)"=wFGARP1, "(3)"=wEUT1,
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 df_noUS <- df |> filter(country=="Tanzania")
 tGARP1 <- lm(CCEI_PQR ~ High , data=df_noUS)
-tGARP2 <- lm(CCEI_PQR ~ High + age + female + one_parent_college + BF_A + BF_C + BF_E + BF_N + BF_O , data=df_noUS)
-tGARP3 <- lm(CCEI_PQR ~ High + age + female + one_parent_college + BF_A + BF_C + BF_E + BF_N + BF_O +iq, data=df_noUS)
+tGARP2 <- lm(CCEI_PQR ~ High + age + female + one_parent_college + workincome + happy + yworried + government_preference + BF_A + BF_C + BF_E + BF_N + BF_O , data=df_noUS)
+tGARP3 <- lm(CCEI_PQR ~ High + age + female + one_parent_college + workincome + happy + yworried + government_preference + BF_A + BF_C + BF_E + BF_N + BF_O +iq, data=df_noUS)
 
 tFGARP1 <- lm(FOSD_PQR ~ High , data=df_noUS)
-tFGARP2 <- lm(FOSD_PQR ~ High + age + female + one_parent_college + BF_A + BF_C + BF_E + BF_N + BF_O , data=df_noUS)
-tFGARP3 <- lm(FOSD_PQR ~ High + age + female + one_parent_college + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df_noUS)
+tFGARP2 <- lm(FOSD_PQR ~ High + age + female + one_parent_college + workincome + happy + yworried + government_preference + BF_A + BF_C + BF_E + BF_N + BF_O , data=df_noUS)
+tFGARP3 <- lm(FOSD_PQR ~ High + age + female + one_parent_college + workincome + happy + yworried + government_preference + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df_noUS)
 
 tEUT1 <- lm(EU_PQR ~ High , data=df_noUS)
-tEUT2 <- lm(EU_PQR ~ High + age + female + one_parent_college + BF_A + BF_C + BF_E + BF_N + BF_O , data=df_noUS)
-tEUT3 <- lm(EU_PQR ~ High + age + female + one_parent_college + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df_noUS)
+tEUT2 <- lm(EU_PQR ~ High + age + female + one_parent_college + workincome + happy + yworried + government_preference + BF_A + BF_C + BF_E + BF_N + BF_O , data=df_noUS)
+tEUT3 <- lm(EU_PQR ~ High + age + female + one_parent_college + workincome + happy + yworried + government_preference + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df_noUS)
 ```
 
 
 ```{r}
 t_names <- c('High' = 'High stakes',
+             'mean_cheapest_asset' = 'Risk aversion',
              'age' = 'Age',
              'female' = 'Female',
              'one_parent_college' = 'Parents have college education',
+             'workincome' = 'Income from work?',
+             'happy' = 'Happiness',
+             'yworried' = 'Worried yesterday',
+             'government_preferenceYes' = 'Public sector preference',
              'iq' = 'IQ',
              '(Intercept)' = 'Constant')
 t_big5 <- c("Big-5 included?", "No", "No", "No", "Yes","Yes","Yes", "Yes","Yes","Yes")
@@ -571,7 +534,7 @@ modelsummary::modelsummary(list("(1)"=tGARP1, "(2)"=tFGARP1, "(3)"=tEUT1,
                                 "(4)"=tGARP2, "(5)"=tFGARP2, "(6)"=tEUT2,
                                 "(7)"=tGARP3, "(8)"=tFGARP3, "(9)"=tEUT3),
                            statistic = "std.error", coef_map = t_names,
-                           stars = c('*' = .1, '**' = .05, '***'=0.1),
+                           stars = c('*' = .1, '**' = .05, '***'=0.01),
                            gof_omit = 'R2 Adj.|AIC|BIC|Log.Lik.|F|RMSE',
                            output = 'latex', 
                            add_rows = as.data.frame(t(t_big5))) |>
@@ -585,7 +548,7 @@ modelsummary::modelsummary(list("(1)"=tGARP1, "(2)"=tFGARP1, "(3)"=tEUT1,
                                 "(4)"=tGARP2, "(5)"=tFGARP2, "(6)"=tEUT2,
                                 "(7)"=tGARP3, "(8)"=tFGARP3, "(9)"=tEUT3),
                            statistic = "std.error", coef_map = t_names,
-                           stars = c('*' = .1, '**' = .05, '***'=0.1),
+                           stars = c('*' = .1, '**' = .05, '***'=0.01),
                            gof_omit = 'R2 Adj.|AIC|BIC|Log.Lik.|F|RMSE',
                            output = 'kableExtra', 
                            add_rows = as.data.frame(t(t_big5))) %>%
@@ -597,25 +560,33 @@ modelsummary::modelsummary(list("(1)"=tGARP1, "(2)"=tFGARP1, "(3)"=tEUT1,
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 r1 <- lm(mean_cheapest_asset ~ High , data=df_noUS)
-r2 <- lm(mean_cheapest_asset ~ High + age + female + one_parent_college + BF_A + BF_C + BF_E + BF_N + BF_O , data=df_noUS)
-r3 <- lm(mean_cheapest_asset ~ High + age + female + one_parent_college + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df_noUS)
+r2 <- lm(mean_cheapest_asset ~ High + age + female + one_parent_college + workincome + happy + yworried + government_preference + BF_A + BF_C + BF_E + BF_N + BF_O , data=df_noUS)
+r3 <- lm(mean_cheapest_asset ~ High + age + female + one_parent_college + workincome + happy + yworried + government_preference + BF_A + BF_C + BF_E + BF_N + BF_O + iq, data=df_noUS)
 ```
 
 
 ```{r}
 r_names <- c('High' = 'High stakes',
+             'mean_cheapest_asset' = 'Risk aversion',
              'age' = 'Age',
              'female' = 'Female',
              'one_parent_college' = 'Parents have college education',
-             'iq' = 'IQ')
+             'workincome' = 'Income from work?',
+             'happy' = 'Happiness',
+             'yworried' = 'Worried yesterday',
+             'government_preferenceYes' = 'Public sector preference',
+             'iq' = 'IQ',
+             '(Intercept)' = 'Constant')
+
+
 r_big5 <- c("Big-5 included?", "No","Yes","Yes")
 modelsummary::modelsummary(list("(1)"=r1, "(2)"=r2, "(3)"=r3),
                            statistic = "std.error", coef_map = r_names,
-                           stars = c('*' = .1, '**' = .05, '***'=0.1),
+                           stars = c('*' = .1, '**' = .05, '***'=0.01),
                            gof_omit = 'R2 Adj.|AIC|BIC|Log.Lik.|F|RMSE',
                            add_rows = as.data.frame(t(r_big5)),
                            output = 'latex') |>
-  add_header_above(c(" ","Mean share cheapest asset"=3))
+  add_header_above(c(" ","Mean share cheapest asset"=3)) |>
   cat(file= here::here("tables/treatmenteffect_riskaversion.tex"))
 ```
 
@@ -631,6 +602,14 @@ modelsummary::modelsummary(list("(1)"=r1, "(2)"=r2, "(3)"=r3),
 ```
 
 ## Distribution of happiness
+
+First, the averages:
+```{r}
+df |> group_by(country) |> 
+  summarize(mean_happiness = mean(happy, na.rm=TRUE)) |>
+  gt::gt() |> gt::fmt_number(decimals=3)
+```
+
 
 ```{r}
 df |> group_by(country, happy) |> 
