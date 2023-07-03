@@ -32,16 +32,221 @@ tar_load(df)
 
 # Summaries of background data
 
+## Experiment data
+
 ```{r}
 df %>% group_by(country) %>%
-  summarize(one_parent_college = mean(one_parent_college),
-            female = mean(sex==2),
-            age = mean(age, na.rm=TRUE)) |>
-  kable(digits=c(0,3,3,1))
+  summarize(n = n(),
+            one_parent_college = mean(one_parent_college, na.rm=TRUE),
+            female = mean(sex==2, na.rm=TRUE),
+            age = mean(age, na.rm=TRUE),
+            worried = mean(yworried, na.rm=TRUE),
+            happiness = mean(happy, na.rm=TRUE),
+            government_preference = mean(government_preference=="Yes", na.rm=TRUE)) |>
+  gt::gt() |>
+  gt::fmt_number(columns = c(one_parent_college, female, worried, happiness, government_preference), decimals = 3) |>
+  gt::fmt_number(columns = c(happiness), decimals = 2) |>
+  gt::fmt_number(columns = age, decimals=1) |>
+  gt::fmt_number(columns=n, decimals=0)
+```
+
+## Follow up survey in Tanzania
+
+```{r}
+tar_load(tanzaniasurvey)
+tz_df <- tanzaniasurvey
 ```
 
 
-# Graphs of behavioral outcomes
+### Where are they from? 
+There are 32 **regions** in Tanzania (three of them on Zanzibar). We have 
+manually classified self-reported (free-form) birthplace to official region names.
+
+```{r}
+tz_df %>% group_by(birth_region) %>%
+  summarize( n = n()) %>%
+  arrange(-n) %>% 
+  mutate( proportion = n/sum(n), 
+          ranking = row_number()) %>%
+  gt::gt() |> 
+  gt::fmt_number(columns = c(n, ranking), decimals = 0) |>
+  gt::fmt_number(columns = c(proportion), decimals = 3)
+```
+
+
+Note that the one "Zanzibar" response is not allocated to a proper region, as
+no more information than "Zanzibar" was given by the respondent. 
+
+While the participants at lab experiments at major American universities
+have been extensively studied, our sample at the University of Dar-es-Salaam
+comes from a less studied population, and not from a permanent pool
+of lab experiments. We implemented a small survey of our Tanzanian
+lab participants (on 215 out of our 216 lab participants). 
+
+While the university is located in Dar-es-Salaam, we have participants
+from 25 out of the 30 Tanzanian regions (as of 2012). Those born in 
+Dar-es-Salaam are well represented (16.7 %), but there are slightly more 
+from Kagera (17.2%) and almost as many from Kilimanjaro (13.5 %). There 
+are 6% or less from each of the other regions.
+
+
+
+### Regional (PPP) GDP / capita
+The regional GDPs per capita  are reported in Table 22 of 
+
+- [NATIONAL ACCOUNTS STATISTICS OF TANZANIA MAINLAND 2012-2018. First Edition IN THE REVISED GDP SERIES BASE YEAR 2015](https://www.nbs.go.tz/nbs/takwimu/na/National_Accounts_Statistics_of_Tanzania_Mainland_2018.pdf). 
+
+
+Punching the 2012 GDP per capita at current prices
+
+```{r}
+TZ_GDP <- tribble(~region, ~gdp2012,
+                  "Dodoma", 927536,
+                  "Arusha",1754637,
+                  "Kilimanjaro", 1725950,
+                  "Tanga", 1431271,
+                  "Morogoro", 1373059,
+                  "Pwani", 1048866,
+                  "Dar es salaam", 2419087,
+                  "Lindi", 1361215,
+                  "Mtwara", 1298007,
+                  "Ruvuma", 1726244,
+                  "Iringa", 1991561,
+                  "Mbeya", 1687330,
+                  "Singida", 872866,
+                  "Tabora", 1074905,
+                  "Rukwa", 1358997,
+                  "Kigoma", 848712,
+                  "Shinyanga", 1124625,
+                  "Kagera", 869527,
+                  "Mwanza", 1450639,
+                  "Mara", 1319264,
+                  "Manyara", 1461955)
+```
+
+For all of the mainland, the number was 
+```{r}
+gdp_tz_mainland <- 1429327
+```
+
+The [GDP per capita, PPP (constant 2017 international $) for Tanzania, according to the World Bank](https://data.worldbank.org/indicator/NY.GDP.PCAP.PP.KD?locations=TZ) was 
+```{r}
+gdp_tz_wbPPP <- 2094
+```
+
+Using the national numbers to compute a national correction factor, we get the PPP adjusted GDP/capita 2012 
+in 2017 international dollars:
+
+```{r}
+TZ_GDP |> mutate(gdp2012ppp = (gdp2012 / gdp_tz_mainland) * gdp_tz_wbPPP) |>
+  arrange(-gdp2012ppp) |>
+  mutate(rank = row_number()) |>
+  dplyr::select(-gdp2012) |>
+  gt::gt() |> 
+  gt::fmt_number(columns=gdp2012ppp, decimals = 0, use_seps = TRUE)
+```
+
+
+
+
+
+
+
+### Field of study
+The most popular reported field of study among our respondents is one or more of the social sciences (42.8%),
+with science and engineering close behind (31.6%). Education (9.8%) and humanities (8.4%) are also represented,
+but there are less than four percent each from business management and law. On average they report
+to be `r mean(tz_df$yrs_study, na.rm=TRUE)` years into their study, with `r max(tz_df$yrs_study, na.rm=TRUE)` as the maximum. 
+
+For a more detailed look at the subjects they studied, let's count the number that in some way
+reported to have economics as part of their degree. 
+
+```{r message=FALSE, warning=FALSE}
+cat_table <- read_csv(here::here("data","studysubjects_categorized.csv")) |>
+  mutate(contains_economic = str_detect(studysubject, regex("economic", ignore_case = TRUE))) |>
+  group_by(contains_economic) |>
+  group_by(category) |>
+  summarize(n  = sum(n_responses),
+            cond_prop_econ = mean(contains_economic)) |>
+  mutate(proportion = n/sum(n)) |>
+  arrange(-proportion) |>  
+  dplyr::select(c(category, proportion, cond_prop_econ)) |>
+  gt::gt() |>
+  gt::fmt_number(columns=c(proportion, cond_prop_econ), decimals = 3) 
+cat_table
+cat_table |> as_latex() |> 
+  as.character() |> 
+  writeLines(con = here::here("tables","studysubjects.tex"))
+```
+
+
+
+### Financing of expenses
+
+The median reported yearly expenses was `r format(median(tz_df$year_expenses2, na.rm=TRUE), scientific=FALSE)` TZS, corresponding to about 
+`r 0.0006 * median(tz_df$year_expenses2, na.rm=TRUE)` USD at 
+2012 exchange rates. 
+
+For a fuller analysis of sources of finance, with all non-reported category observations set to zero:
+
+```{r warning=FALSE}
+income_table <- tanzaniasurvey |> 
+  dplyr::select(c(survey_id, ann_finance1, ann_finance2, ann_finance3, ann_finance4,
+                  ann_finance5, ann_finance6, ann_finance7, ann_finance8)) |>
+  pivot_longer(starts_with("ann_finance")) |>
+  mutate(amount = ifelse(!is.na(value),value,0),
+         name = factor(name),
+         source = fct_recode(name,
+                             "Government support/loan" = "ann_finance1",
+                             "Support from family" = "ann_finance2",
+                             "Loan from family" = "ann_finance3",
+                             "Own work" = "ann_finance4",
+                             "Scholarship grant" = "ann_finance5",
+                             "Other grants" = "ann_finance6",
+                             "Support from NGO" = "ann_finance7",
+                             "Other" = "ann_finance8"),
+         nonzero = as.numeric(amount>0)) |>
+  group_by(survey_id) |> 
+  mutate( share = amount / sum(amount)) |>
+  group_by(source) |>
+  summarize(share_with_positive = mean(nonzero),
+            mean_share = mean(share, na.rm=TRUE)) |>
+  arrange(-share_with_positive) |>
+  dplyr::select(c(source, share_with_positive, mean_share)) |>
+  gt::gt() |> gt::fmt_number(decimals=3)
+income_table
+income_table |> 
+  as_latex() |> 
+  as.character() |> 
+  writeLines(con=here::here("tables","budgetshares.tex"))
+```
+
+We also have a couple of more specific questions about support:
+
+```{r}
+tz_df |> summarize(any_familysupport = mean(familysupport),
+                   mean_familysupport = mean(familysupport_value, na.rm=TRUE),
+                   median_familysupport = median(familysupport_value, na.rm=TRUE)) |>
+  gt::gt() |>
+  gt::fmt_number(columns = any_familysupport, decimals = 3) |>
+  gt::fmt_number(columns = c(mean_familysupport,median_familysupport), decimals=0)
+```
+
+
+
+And for government loans
+
+```{r}
+tz_df |> 
+  summarize(mean_govloan = mean(govloan>0, na.rm=TRUE),
+            mean_govloanshare = mean(govloan, na.rm=TRUE)) |>
+  gt::gt() |> gt::fmt_number(decimals=3)
+```
+
+
+
+
+# Descriptives of behavioral outcomes
 
 ## Means of the main outcomes
 
@@ -58,8 +263,51 @@ fig_dta |> dplyr::select(country, outcome_nm, mean) |>
   pivot_wider(id_cols=outcome_nm, names_from = country, values_from = mean) |>
   mutate(difference = `United States` - Tanzania) |>
   gt::gt() |>
-  gt::fmt_number(columns=c(Tanzania, `United States`, difference), decimals=3)
+  gt::fmt_number(columns=c(Tanzania, `United States`), decimals=2) |>
+  gt::fmt_number(columns=difference, decimals=3) 
 ```
+
+For how many is the difference between $e^{**}$ and $e^{***}$ less than 0.01? 
+
+```{r}
+df |> 
+  mutate(smaller_than1p = abs(EU_PQR-FOSD_PQR)<0.01) |>
+  group_by(country) |>
+  summarize(mean_smaller_than1p = mean(smaller_than1p)) |>
+  gt::gt() |> fmt_number(decimals = 3)
+```
+
+How many have rationalizability scores above given thresholds?
+
+```{r}
+df |> pivot_longer( cols=c(CCEI_PQR,FOSD_PQR,EU_PQR), names_to = "RPstat",values_to="e")  |>
+  dplyr::select(country, RPstat, e) |>
+  mutate(above90 = e>0.9,
+         above95 = e>0.95,
+         RPstat = factor(RPstat, levels=c("CCEI_PQR","FOSD_PQR", "EU_PQR"))) |>
+  group_by(country, RPstat) |>
+  summarize(share_above90 = mean(above90),
+            share_above95 = mean(above95)) |>
+  arrange(country, RPstat) |>
+  gt::gt() |> fmt_number(decimals = 3)
+  
+
+```
+
+
+
+And what are the correlations between IQ and the rationalizability measures in the US and Tanzania?
+
+```{r}
+df |> group_by(country) |> 
+  summarize(cor_IQ_CCEI = cor(iq, CCEI_PQR),
+            cor_IQ_FOSD = cor(iq, FOSD_PQR),
+            cor_IQ_EU= cor(iq, EU_PQR)) |>
+  gt::gt() |> 
+  gt::fmt_number(decimals=3)
+```
+
+
 
 
 Now, the first plot with the rationalizability scores:
@@ -105,6 +353,12 @@ ggsave(here("graphs", "zmean_differences.pdf"), width=16, height=10, units="cm")
 In the final figure, each of the four outcomes have been standardized to an overall average of zero and unit variance before
 calculating the averages by country.
 
+The exact numbers in the graph are:
+```{r} 
+fig_dtaw |> gt::gt() |>
+  fmt_number(decimals = 2)
+```
+
 
 
 ## Survival function plot 
@@ -117,42 +371,16 @@ ggsave(here::here("graphs","survival_graph.pdf"),
 ```
 
 
-# Summary statistics on socio demographics
-
-
-```{r}
-dfb_selected <- df %>% dplyr::select(c("ID", "workincome", "two_parents_HS", 
-                                 "one_parent_college"))
-df %>% dplyr::select(c("ID", "country", "age", "female", "BF_E", "BF_A", "BF_C", 
-  "BF_N", "BF_O", "iq")) %>%
-  left_join(dfb_selected, by="ID") %>%
-  dplyr::select(-"ID") %>%
-  group_by(country) %>%
-  summarize_all(list(mean= ~ mean(., na.rm=TRUE), se= ~se(.)))  %>%
-  gather(key="key", value="value", age_mean:one_parent_college_se) %>%
-  spread(key="country", value="value") %>% knitr::kable(digits=3)
-```
-
-
-## Tests for table
-```{r}
-df %>% t.test(iq ~ country, data=.)
-df %>% t.test(BF_A ~ country, data=.)
-df %>% t.test(BF_C ~ country, data=.)
-df %>% t.test(BF_E ~ country, data=.)
-df %>% t.test(BF_N ~ country, data=.)
-df %>% t.test(BF_O ~ country, data=.)
-```
-
 
 # Risk aversion
 
 For Tanzania, we are interested in whether high and low stakes individuals
 exhibited different risk aversion. We operationalize risk aversion by
-the average fraction of tokens in the cheaper security.
+the average fraction of tokens in the cheaper security (so a high number means
+low risk aversion).
 
 
-Now, what are the average risk aversion in the three group?
+Now, what are the average risk aversion in the three groups?
 ```{r}
 df |> group_by(country_high) |> 
   summarize(mean = mean(mean_cheapest_asset),
@@ -276,6 +504,11 @@ m_names <- c('Tanzania' = 'Tanzania',
              'happy' = 'Happiness',
              'yworried' = 'Worried yesterday',
              'government_preferenceYes' = 'Public sector preference',
+             'BF_A' = 'Agreeableness',
+             'BF_C' = 'Conscientiousness',
+             'BF_E' = 'Extraversion',
+             'BF_N' = 'Neuroticism',
+             'BF_O' = 'Openness to experience',
              'iq' = 'IQ',
              '(Intercept)' = 'Constant')
 big5 <- c("Big-5 included?", "No", "No", "No", "Yes","Yes","Yes","Yes","Yes","Yes","Yes","Yes")
@@ -327,112 +560,22 @@ df |> group_by(country_high) |>
 
 # More descriptives about the Tanzania sample
 
-For the Tanzania sample, we have a separate survey. 
-```{r}
-tar_load(tanzaniasurvey)
-tz_df <- tanzaniasurvey
-```
-
-
-## Where are they from? 
-There are 32 **regions** in Tanzania (three of them on Zanzibar). I have 
-manually classified self-reported birthplace to region.
-
-```{r}
-tz_df %>% group_by(birth_region) %>%
-  summarize( n = n()) %>%
-  arrange(-n) %>% 
-  mutate( proportion = n/sum(n), 
-          ranking = row_number()) %>%
-  knitr::kable(digits=3)
-```
-
-
-Note that the one "Zanzibar" response is not allocated to a proper region, as
-no more information than "Zanzibar" was given by the respondent. 
-
-While the participants at lab experiments at major American universities
-have been extensively studied, our sample at the University of Dar-es-Salaam
-comes from a less studied population, and not from a permanent pool
-of lab experiments. We implemented a small survey of our Tanzanian
-lab participants (on 215 out of our 216 lab participants). 
-
-While the university is located in Dar-es-Salaam, we have participants
-from 25 out of the 30 Tanzanian regions (as of 2012). Those born in 
-Dar-es-Salaam are well represented (16.7 %), but there are slightly more 
-from Kagera (17.2%) and almost as many from Kilimanjaro (13.5 %). There 
-are 6% or less from each of the other regions.
-The most popular reported field of study among our respondents is one or more of the social sciences (42.8%),
-with science and engineering close behind (31.6%). Education (9.8%) and humanities (8.4%) are also represented,
-but there are less than four percent each from business management and law. On average they report
-to be `r mean(tz_df$yrs_study, na.rm=TRUE)` years into their study, with `r max(tz_df$yrs_study, na.rm=TRUE)` as the maximum. 
-
-For a more detailed look at the subjects they studied, let's count the number that in some way
-reported to have economics as part of their degree. 
-
-```{r}
-cat_table <- read_csv(here::here("data","studysubjects_categorized.csv")) |>
-  mutate(contains_economic = str_detect(studysubject, regex("economic", ignore_case = TRUE))) |>
-  group_by(contains_economic) |>
-  group_by(category) |>
-  summarize(n  = sum(n_responses),
-            cond_prop_econ = mean(contains_economic)) |>
-  mutate(proportion = n/sum(n)) |>
-  arrange(-proportion) |>  
-  dplyr::select(c(category, proportion, cond_prop_econ)) |>
-  gt::gt() |>
-  gt::fmt_number(columns=c(proportion, cond_prop_econ), decimals = 3) 
-cat_table
-cat_table |> as_latex() |> 
-  as.character() |> 
-  writeLines(con = here::here("tables","studysubjects.tex"))
-```
-
-
-## Financing of expenses
-
-The median reported yearly expenses was `r median(tz_df$year_expenses2, na.rm=TRUE)` TZS, corresponding to about 
-`r 0.0006 * median(tz_df$year_expenses2, na.rm=TRUE)` USD at 
-2012 exchange rates. 
-
-For a fuller analysis of sources of finance, with all missing category observations set to zero:
-
-```{r warning=FALSE}
-income_table <- tanzaniasurvey |> 
-  dplyr::select(c(survey_id, ann_finance1, ann_finance2, ann_finance3, ann_finance4,
-                  ann_finance5, ann_finance6, ann_finance7, ann_finance8)) |>
-  pivot_longer(starts_with("ann_finance")) |>
-  mutate(amount = ifelse(!is.na(value),value,0),
-         name = factor(name),
-         source = fct_recode(name,
-                             "Government support/loan" = "ann_finance1",
-                             "Support from family" = "ann_finance2",
-                             "Loan from family" = "ann_finance3",
-                             "Own work" = "ann_finance4",
-                             "Scholarship grant" = "ann_finance5",
-                             "Other grants" = "ann_finance6",
-                             "Support from NGO" = "ann_finance7",
-                             "Other" = "ann_finance8"),
-         nonzero = as.numeric(amount>0)) |>
-  group_by(survey_id) |> 
-  mutate( share = amount / sum(amount)) |>
-  group_by(source) |>
-  summarize(share_with_positive = mean(nonzero),
-            mean_share = mean(share, na.rm=TRUE)) |>
-  arrange(-share_with_positive) |>
-  dplyr::select(c(source, share_with_positive, mean_share)) |>
-  gt::gt() |> gt::fmt_number(decimals=3)
-income_table
-income_table |> 
-  as_latex() |> 
-  as.character() |> 
-  writeLines(con=here::here("tables","budgetshares.tex"))
-```
-
-
-
 
 # Further analysis (for appendix)
+
+## CDF graphs for outcomes
+
+```{r}
+tar_load(cdf_dta)
+cdf_dta %>% ggplot(aes(x=value, linetype=country)) + 
+  stat_ecdf(geom="step") + 
+  facet_wrap(.~yfct) + 
+  theme_minimal() + 
+  theme(legend.position="bottom") + 
+  labs(y = "ECDF(outcome)", x=element_blank()) 
+ggsave(here("graphs", "cdf_outcomes.pdf"), width=16, height = 10, units = "cm")
+```
+
 
 ## Variant of Table I from main paper with risk aversion and everything 
 
