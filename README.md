@@ -52,7 +52,7 @@ The data file is downloaded when the `targets` plan is first run.
 
 ### Software requirements
 
-The analysis code was developed on an Ubuntu 22.04.2 machine with R 4.3.0. The 
+The analysis code was developed on an Ubuntu 22.04.2 machine with R 4.3.1. The 
 script that runs all the code (`main.R`) will install the packages needed, of the correct version,
 into a local library using the `renv` library (which must be installed ahead of time). The list
 of packages (and all necessary recursive dependencies) is found in the `renv` configuration file
@@ -62,20 +62,18 @@ of packages (and all necessary recursive dependencies) is found in the `renv` co
 
 Calculating the revealed preference statistics (in particular the CCEI for
 Expected Utility) is slow. the current setup parallelizes and runs separate
-branches for each participant. Running 12 processes in parallel on a 2017
-workstation (Xeon E-2136 & 3.3GHz, 40GB memory), each branch takes on average a
-bit more than 20 minutes, so there are about 30 individuals processed per hour,
-or about 12 hours in total for this task with memory usage at about 25 GB.
+branches for each participant. Running 32 processes in parallel on a modern server (AMD EPYC 7543P 32-Core Processor, 2.8GHz), 
+the total time for calculating everything from scratch is about 2 hours (using less than 100GB memory).
 The parallel computations are controlled by the `future` library, and in 
 `main.R` there is a line to control how many worker processes to start:
 
-> tar_make_future(workers = 12)
+> tar_make_future(workers = 32)
 
 Set the number of workers to a number that is compatible with the number of cores 
-you can set aside (multiply by two if your processor allows hyperthreading).
+you can set aside.
 
-Given the revealed preference statistics, the time needed to reproduce
-the analyses is trivial (less than a minute).
+Given the revealed preference statistics (from a previous run), the time needed to reproduce
+the analyses is trivial (less than a minute), the `targets` library caches data and precalculated results.
 
 
 ## Description of programs/code
