@@ -27,6 +27,7 @@ source("R/functions.R")
 # Reading data
 ```{r}
 tar_load(df)
+tar_load(studysubjects_categorized)
 ```
 
 
@@ -162,7 +163,7 @@ For a more detailed look at the subjects they studied, let's count the number th
 reported to have economics as part of their degree. 
 
 ```{r message=FALSE, warning=FALSE}
-cat_table <- read_csv(here::here("data","studysubjects_categorized.csv")) |>
+cat_table <- studysubjects_categorized |>
   mutate(contains_economic = str_detect(studysubject, regex("economic", ignore_case = TRUE))) |>
   group_by(contains_economic) |>
   group_by(category) |>
