@@ -13,6 +13,8 @@ tar_option_set(
     "here",
     "ggplot2",
     "forcats",
+    "sjlabelled",
+    "sjmisc",
     "haven", 
     "gtools",                # Per instruction by Pollison, Quah, and Renou.
     "lpSolve",               # Per instruction by Pollison, Quah, and Renou.

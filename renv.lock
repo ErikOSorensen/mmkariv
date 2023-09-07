@@ -1735,6 +1735,26 @@
       ],
       "Hash": "4bd18166ef8ca74aeec74ad295dfe77f"
     },
+    "sjmisc": {
+      "Package": "sjmisc",
+      "Version": "2.8.9",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "dplyr",
+        "insight",
+        "magrittr",
+        "methods",
+        "purrr",
+        "rlang",
+        "sjlabelled",
+        "stats",
+        "tidyselect",
+        "utils"
+      ],
+      "Hash": "86176cb3be04b2930649dce2bf56d3cb"
+    },
     "stringi": {
       "Package": "stringi",
       "Version": "1.7.12",
