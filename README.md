@@ -23,7 +23,7 @@ decision-making ability.
 The master file this replication package will:
 
 1. Install the required versions of the necessary `R` packages from CRAN.
-2. Downloads the necessary datafiles from Harvard Dataverse (TBC).
+2. Downloads the necessary datafiles from Harvard Dataverse: https://doi.org/10.7910/DVN/CCODET .
 3. Create all the displays in the paper as separate files (documented below).
 4. Create markdown documents for numbers referenced in the paper but not explicitly part of produced tables.
 
@@ -38,7 +38,7 @@ domain at Harvard Dataverse:
 
 
 The experimental and survey data used to support the findings of this study have
-been deposited in the Harvard Dataverse repository ([DOI or OTHER PERSISTENT IDENTIFIER]).
+been deposited in the Harvard Dataverse repository (https://doi.org/10.7910/DVN/CCODET).
 The data were collected by the authors, and are available under a Creative
 Commons Non-commercial license.
 
