@@ -39,8 +39,9 @@ domain at Harvard Dataverse:
 
 The experimental and survey data used to support the findings of this study have
 been deposited in the Harvard Dataverse repository (https://doi.org/10.7910/DVN/CCODET).
-The data were collected by the authors, and are available under a Creative
-Commons Non-commercial license.
+The data were collected by the authors, are available under a Creative
+Commons Non-commercial license, and were assembled and prepared by code available at [![DOI](https://zenodo.org/badge/580859988.svg)](https://zenodo.org/badge/latestdoi/580859988).
+
 
 We certify that the author(s) of the manuscript have legitimate access to and permission to use the data used in this manuscript, and the data are licensed under a Creative Commons/CC0 license. See [LICENSE_CC0.txt](LICENSE_CC0.txt) for details.
 
