@@ -420,6 +420,22 @@
       ],
       "Hash": "b4c06e554f33344e044ccd7fdca750a9"
     },
+    "dataverse": {
+      "Package": "dataverse",
+      "Version": "0.3.13",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "checkmate",
+        "httr",
+        "jsonlite",
+        "readr",
+        "stats",
+        "utils",
+        "xml2"
+      ],
+      "Hash": "a63730b03d99a4a4b55ba885da385052"
+    },
     "datawizard": {
       "Package": "datawizard",
       "Version": "0.8.0",
