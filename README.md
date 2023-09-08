@@ -115,6 +115,40 @@ The code in `R/PollisonEtAl.R` is a collection of code from Pollison et al (2020
 covered by the [Creative Commons BY 4.0 license](https://creativecommons.org/licenses/by/4.0/). Apart from 
 collecting several functions into one file, no change was made to this code.
 
+## Display items
+
+The hard computational outcomes (the Revealed Preference statistics, in particular $e^{***}$) are
+precalculated as targets defined in the `_targets.R` file. The presentation layer is found in the 
+`estimates.Rmd` file, which loads the targets pre-calculated and creates the display items
+and the statistics referenced in the text. The location is indicated by the name of the 
+R-markdown *chunk* within `estimates.Rmd`.
+
+For the paper:
+
+| **Display Item** | **Filename**         | **Chunk-name**   | **Comment**              |
+|------------------|----------------------|------------------|--------------------------|
+| Figure 1         | na                   | na               | theory, no data |
+| Figure 2         | graphs/Figure2.pdf   | mean_differences |                          |
+| Figure 3         | graphs/Figure3.pdf   | survival_graph   |                          |
+| Figure 4         | graphs/Figure4.pdf          | zmean_differences|
+| Table 1          | tables/development_gap.tex  | development_gap  | minimal manual formatting added |
+
+For the online appendix:
+
+| **Display Item** | **Filename**         | **Chunk-name**   | **Comment**              |
+|------------------|----------------------|------------------|--------------------------|
+| Figure A1        | graphs/cdf_outcomes.pdf  |    cdf_outcomes    |                          |
+| Figure A2        | graphs/government_preference.pdf |  government_preference   |         |
+| Figure A3        | graphs/happiness_distribution.pdf | happiness_distribution        | 
+| Table A1         | tables/studysubjects.tex | studysubjects  |
+| Table A2         | tables/budgetshares.tex | budgetshares |
+| Table A3         | tables/development_gap_withrisk.tex | development_gap_withrisk |
+| Table A4         | tables/treatmenteffect_riskaversion.tex | treatmenteffect_riskaversion| 
+| Table A5         | tables/treatmenteffect_stakes.tex | treatmenteffect_stakes |
+| Table A6         | tables/development_gap.tex        | development_gap |   Selection of rows |
+
+
+
 
 ## References
 
