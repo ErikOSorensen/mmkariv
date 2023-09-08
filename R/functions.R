@@ -4,7 +4,7 @@ process_background <- function(background) {
     dplyr::mutate(two_parents_HS = sjlabelled::zap_labels(mother2school) *
                   sjlabelled::zap_labels(father2school),
                   one_parent_college = pmax(motheruni,fatheruni),
-                  country = sjlabelled::as_label(country),
+                  country = fct_relevel( sjlabelled::as_label(country), "United States"),
                   iq = iq/26.0,
                   female = as.numeric(sex==2),
                   government_preference  = factor(ifelse(jobopp_govm==3, "Yes", "No"), levels=c("No","Yes")),
@@ -68,7 +68,9 @@ cdf_data <- function(df) {
 
 
 survivalgraph <- function(cdf_data) {
-  s_df <- cdf_data |> group_by(country,yfct) |>
+  s_df <- cdf_data |>
+    filter(outcome!="iq") |>
+    group_by(country,yfct) |>
     mutate(S  = 1 - cume_dist(value),
            prop = cut(value, c(0,seq(0.6,1,0.1)))) %>%
     group_by(country, yfct, prop) %>%
@@ -92,7 +94,8 @@ survivalgraph <- function(cdf_data) {
     facet_wrap(. ~ yfct) + 
     theme( strip.text=element_text(hjust=0) ) +
     labs(x = "Critical value",
-         y = "Fraction of subjects") 
+         y = "Fraction of subjects",
+         fill = "Country") 
 }
 
 calculate_rp_statistics <- function(d) {

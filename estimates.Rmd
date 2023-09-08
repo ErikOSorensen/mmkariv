@@ -162,7 +162,7 @@ to be `r mean(tz_df$yrs_study, na.rm=TRUE)` years into their study, with `r max(
 For a more detailed look at the subjects they studied, let's count the number that in some way
 reported to have economics as part of their degree. 
 
-```{r message=FALSE, warning=FALSE}
+```{r studysubjects, message=FALSE, warning=FALSE}
 cat_table <- studysubjects_categorized |>
   mutate(contains_economic = str_detect(studysubject, regex("economic", ignore_case = TRUE))) |>
   group_by(contains_economic) |>
@@ -190,7 +190,7 @@ The median reported yearly expenses was `r format(median(tz_df$year_expenses2, n
 
 For a fuller analysis of sources of finance, with all non-reported category observations set to zero:
 
-```{r warning=FALSE}
+```{r budgetshares, warning=FALSE}
 income_table <- tanzaniasurvey |> 
   dplyr::select(c(survey_id, ann_finance1, ann_finance2, ann_finance3, ann_finance4,
                   ann_finance5, ann_finance6, ann_finance7, ann_finance8)) |>
@@ -312,7 +312,7 @@ df |> group_by(country) |>
 
 
 Now, the first plot with the rationalizability scores:
-```{r}
+```{r mean_differences}
 fig_dta %>% filter(outcome_nm!="iq") %>%
   ggplot(aes(x=outcome_nm, 
              y=mean, 
@@ -324,7 +324,7 @@ fig_dta %>% filter(outcome_nm!="iq") %>%
   labs(y="Mean \u00B1 95% C.I.", x= element_blank(), fill = "Country") +
   theme_minimal() + 
   ylim(0, 1) 
-ggsave(here("graphs", "mean_differences.pdf"), width=16, height=10, units="cm")
+ggsave(here("graphs", "Figure2.pdf"), width=16, height=10, units="cm")
 ```
 
 Similar graph, but with standardized outcomes and including the IQ scores. We decided to change this
@@ -338,7 +338,7 @@ fig_dtaw <- fig_dta |>
 ```
 
 
-```{r}
+```{r zmean_differences}
 fig_dtaw %>%
   ggplot(aes(x=outcome_nm, 
              y=zdiff, 
@@ -348,7 +348,7 @@ fig_dtaw %>%
   geom_errorbar(width=0.3) +
   labs(y="Mean difference in standardized outcomes\nUnited States vs Tanzania \u00B1 95% C.I.", x= element_blank()) +
   theme_minimal() 
-ggsave(here("graphs", "zmean_differences.pdf"), width=16, height=10, units="cm")
+ggsave(here("graphs", "Figure4.pdf"), width=16, height=10, units="cm")
 ```
 
 In the final figure, each of the four outcomes have been standardized to an overall average of zero and unit variance before
@@ -363,11 +363,11 @@ fig_dtaw |> gt::gt() |>
 
 
 ## Survival function plot 
-```{r}
+```{r survival_graph}
 tar_load(cdf_data)
 tar_load(survival_gg)
 survival_gg 
-ggsave(here::here("graphs","survival_graph.pdf"), 
+ggsave(here::here("graphs","Figure3.pdf"), 
        width=16, height=10, units="cm")
 ```
 
@@ -495,7 +495,7 @@ Ztanzania
 
 
 
-```{r warning=FALSE}
+```{r development_gap, warning=FALSE}
 m_names <- c('Tanzania' = 'Tanzania',
              'High' = 'High stakes (Tanzania)',
              'age' = 'Age',
@@ -566,7 +566,7 @@ df |> group_by(country_high) |>
 
 ## CDF graphs for outcomes
 
-```{r}
+```{r cdf_outcomes}
 tar_load(cdf_dta)
 cdf_dta %>% ggplot(aes(x=value, linetype=country)) + 
   stat_ecdf(geom="step") + 
@@ -601,7 +601,7 @@ rIQ2 <- lm(iq ~ Tanzania + High + mean_cheapest_asset + age + female + one_paren
 
 
 
-```{r}
+```{r development_gap_withrisk}
 rm_names <- c('Tanzania' = 'Tanzania',
              'High' = 'High stakes (Tanzania)',
              'mean_cheapest_asset' = 'Risk aversion',
@@ -662,7 +662,7 @@ tEUT3 <- lm(EU_PQR ~ High + age + female + one_parent_college + workincome + hap
 ```
 
 
-```{r}
+```{r treatmenteffect_stakes}
 t_names <- c('High' = 'High stakes',
              'mean_cheapest_asset' = 'Risk aversion',
              'age' = 'Age',
@@ -710,7 +710,7 @@ r3 <- lm(mean_cheapest_asset ~ High + age + female + one_parent_college + workin
 ```
 
 
-```{r}
+```{r treatmenteffect_riskaversion}
 r_names <- c('High' = 'High stakes',
              'mean_cheapest_asset' = 'Risk aversion',
              'age' = 'Age',
@@ -756,7 +756,7 @@ df |> group_by(country) |>
 ```
 
 
-```{r}
+```{r happiness_distribution}
 df |> group_by(country, happy) |> 
   summarize( freq = n()) |>
   group_by(country) |>
@@ -779,7 +779,7 @@ same in all of them. How would you rate these jobs?
 They then rated "government employee" on a 1 (not so good) to 3 (very good) scale. Breaking down such that 3 is
 an active preference from being a government employee:
 
-```{r}
+```{r government_preference}
 tar_load(pubpreffig_dta)
 pubpreffig_dta |>
   ggplot(aes(x=outcome_nm, 
