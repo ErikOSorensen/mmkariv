@@ -1,0 +1,23 @@
+---
+title: "Extracting data for Shachar's benchmarking exercise"
+author: "Erik Ø. Sørensen"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(targets)
+library(tidyverse)
+library(writexl)
+```
+
+Including all data   
+
+```{r}
+tar_load(df)
+sk_subset <- df |> 
+  dplyr::select(c(ID, Tanzania, High, female, mean_cheapest_asset, CCEI_PQR, FOSD_PQR, EU_PQR))
+sk_subset |> write_xlsx(here::here("tables", "sk_subset.xlsx"))
+```
+
